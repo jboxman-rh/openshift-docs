@@ -1,7 +1,7 @@
 // Module included in the following assemblies:
 //
 // * networking/openshift_sdn/assigning-egress-ips.adoc
-// * networking/ovn_kubernetes_network_provider/assigning-egress-ips-ovn.adoc
+// * networking/ovn_kubernetes_network_provider/configuring-egress-ips-ovn.adoc
 
 ifeval::["{context}" == "egress-ips"]
 :openshift-sdn:
@@ -10,7 +10,7 @@ ifeval::["{context}" == "configuring-egress-ips-ovn"]
 :ovn:
 endif::[]
 
-ifdef::ovn[]
+// Generally applicable to both cluster network providers
 [id="nw-egress-ips-about_{context}"]
 = Egress IP address architectural design and implementation
 
@@ -43,6 +43,7 @@ The egress IP address implementation is not compatible with Amazon Web Services 
 
 |===
 
+ifdef::ovn[]
 [id="nw-egress-ips-considerations_{context}"]
 == Assignment of egress IPs to pods
 
@@ -205,6 +206,7 @@ The automatic assignment approach works best for clusters installed in environme
 [id="considerations-manual-egress-ips"]
 == Considerations when using manually assigned egress IP addresses
 
+// Is this still recommended for public cloud?
 This approach is recommended for clusters installed in public cloud environments, where there can be limitations on associating additional IP addresses with nodes.
 
 When using the manual assignment approach for egress IP addresses the following considerations apply:
