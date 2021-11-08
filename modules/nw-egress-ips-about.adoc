@@ -21,15 +21,44 @@ To ensure that you can reliably allow access to the server from only that specif
 
 An egress IP address is implemented as an additional IP address on the primary network interface of a node and must be in the same subnet as the primary IP address of the node. The additional IP address must not be assigned to any other node in the cluster.
 
+ifdef::openshift-sdn[]
+// TODO
+// This can be reabsorbed into the above paras
+By configuring an egress IP address for a project, all outgoing external connections from the specified project will share the same, fixed source IP address.
+External resources can recognize traffic from a particular project based on the egress IP address.
+An egress IP address assigned to a project is different from the egress router, which is used to send traffic to specific destinations.
+
+Egress IP addresses are implemented as additional IP addresses on the primary network interface of the node and must be in the same subnet as the node's primary IP address.
+
+[IMPORTANT]
+====
+Egress IP addresses must not be configured in any Linux network configuration files, such as `ifcfg-eth0`.
+
+Allowing additional IP addresses on the primary network interface might require extra configuration when using some cloud or VM solutions.
+====
+
+[IMPORTANT]
+====
+The following limitations apply when using egress IP addresses with the OpenShift SDN cluster network provider:
+
+- You cannot use manually assigned and automatically assigned egress IP addresses on the same nodes.
+- If you manually assign egress IP addresses from an IP address range, you must not make that range available for automatic IP assignment.
+- You cannot share egress IP addresses across multiple namespaces using the OpenShift SDN egress IP address implementation.
+
+If you need to share IP addresses across namespaces, the OVN-Kubernetes cluster network provider egress IP address implementation allows you to span IP addresses across multiple namespaces.
+====
+
+[NOTE]
+====
+If you use OpenShift SDN in multitenant mode, you cannot use egress IP addresses with any namespace that is joined to another namespace by the projects that are associated with them.
+For example, if `project1` and `project2` are joined by running the `oc adm pod-network join-projects --to=project1 project2` command, neither project can use an egress IP address. For more information, see link:https://bugzilla.redhat.com/show_bug.cgi?id=1645577[BZ#1645577].
+====
+endif::openshift-sdn[]
+
 [id="nw-egress-ips-platform-support_{context}"]
 == Platform support
 
 Support for the egress IP address functionality on various platforms is summarized in the following table:
-
-[IMPORTANT]
-====
-The egress IP address implementation is not compatible with Amazon Web Services (AWS), Azure Cloud, or any other public cloud platform incompatible with the automatic layer 2 network manipulation required by the egress IP feature.
-====
 
 [cols="1,1",options="header"]
 |===
@@ -37,9 +66,11 @@ The egress IP address implementation is not compatible with Amazon Web Services 
 | Platform | Supported
 
 | Bare metal | Yes
-| vSphere | Yes
+| VMWare vSphere | Yes
 | {rh-openstack-first} | No
-| Public cloud | No
+| Amazon Web Services (AWS) | Yes
+| Google Cloud Platform (GCP) | Yes
+| Microsoft Azure | Yes
 
 |===
 
@@ -143,23 +174,10 @@ For the configuration in the previous example, {product-title} assigns both egre
 endif::ovn[]
 
 ifdef::openshift-sdn[]
-[id="nw-egress-ips-about_{context}"]
-= Egress IP address assignment for project egress traffic
+[id="automatic-manual-assignment-approaches"]
+== IP address assignment approaches
 
-By configuring an egress IP address for a project, all outgoing external connections from the specified project will share the same, fixed source IP address.
-External resources can recognize traffic from a particular project based on the egress IP address.
-An egress IP address assigned to a project is different from the egress router, which is used to send traffic to specific destinations.
-
-Egress IP addresses are implemented as additional IP addresses on the primary network interface of the node and must be in the same subnet as the node's primary IP address.
-
-[IMPORTANT]
-====
-Egress IP addresses must not be configured in any Linux network configuration files, such as `ifcfg-eth0`.
-
-Allowing additional IP addresses on the primary network interface might require extra configuration when using some cloud or VM solutions.
-====
-
-You can assign egress IP addresses to namespaces by setting the `egressIPs` parameter of the `NetNamespace` object. After an egress IP is associated with a project, OpenShift SDN allows you to assign egress IPs to hosts in two ways:
+You can assign egress IP addresses to namespaces by setting the `egressIPs` parameter of the `NetNamespace` object. After an egress IP address is associated with a project, OpenShift SDN allows you to assign egress IP addresses to hosts in two ways:
 
 * In the _automatically assigned_ approach, an egress IP address range is assigned to a node.
 * In the _manually assigned_ approach, a list of one or more egress IP address is assigned to a node.
@@ -171,26 +189,8 @@ High availability of nodes is automatic.
 If a node that hosts an egress IP address is unreachable and there are nodes that are able to host that egress IP address, then the egress IP address will move to a new node.
 When the unreachable node comes back online, the egress IP address automatically moves to balance egress IP addresses across nodes.
 
-[IMPORTANT]
-====
-The following limitations apply when using egress IP addresses with the OpenShift SDN cluster network provider:
-
-- You cannot use manually assigned and automatically assigned egress IP addresses on the same nodes.
-- If you manually assign egress IP addresses from an IP address range, you must not make that range available for automatic IP assignment.
-- You cannot share egress IP addresses across multiple namespaces using the OpenShift SDN egress IP address implementation.
-ifeval::["{product-version}" >= "4.6"]
-If you need to share IP addresses across namespaces, the OVN-Kubernetes cluster network provider egress IP address implementation allows you to span IP addresses across multiple namespaces.
-endif::[]
-====
-
-[NOTE]
-====
-If you use OpenShift SDN in multitenant mode, you cannot use egress IP addresses with any namespace that is joined to another namespace by the projects that are associated with them.
-For example, if `project1` and `project2` are joined by running the `oc adm pod-network join-projects --to=project1 project2` command, neither project can use an egress IP address. For more information, see link:https://bugzilla.redhat.com/show_bug.cgi?id=1645577[BZ#1645577].
-====
-
 [id="considerations-automatic-egress-ips"]
-== Considerations when using automatically assigned egress IP addresses
+=== Considerations when using automatically assigned egress IP addresses
 
 When using the automatic assignment approach for egress IP addresses the following considerations apply:
 
@@ -204,7 +204,7 @@ If the node hosting the namespace's egress IP address is unreachable, {product-t
 The automatic assignment approach works best for clusters installed in environments with flexibility in associating additional IP addresses with nodes.
 
 [id="considerations-manual-egress-ips"]
-== Considerations when using manually assigned egress IP addresses
+=== Considerations when using manually assigned egress IP addresses
 
 // Is this still recommended for public cloud?
 This approach is recommended for clusters installed in public cloud environments, where there can be limitations on associating additional IP addresses with nodes.
