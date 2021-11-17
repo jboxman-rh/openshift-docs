@@ -74,6 +74,10 @@ Support for the egress IP address functionality on various platforms is summariz
 
 |===
 
+// Is it worth mentioning that there's also a limit how many MAC addresses
+// a NIC on a bare metal cluster can host before performance degrades?
+// I wonder if this applies to VMWare?
+
 For clusters provisioned on public cloud infrastructure, there is a constraint on the absolute number of assignable IP addresses per node. The maximum number of assignable IP addresses per node, or _IP capacity_, can be described in the following formula:
 
 [source,text]
