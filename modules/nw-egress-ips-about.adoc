@@ -63,16 +63,25 @@ Support for the egress IP address functionality on various platforms is summariz
 [cols="1,1",options="header"]
 |===
 
-| Platform | Supported
+| Platform | Supported | Constraints
 
-| Bare metal | Yes
-| VMWare vSphere | Yes
-| {rh-openstack-first} | No
-| Amazon Web Services (AWS) | Yes
-| Google Cloud Platform (GCP) | Yes
-| Microsoft Azure | Yes
+| Bare metal | Yes | No
+| VMWare vSphere | Yes | No
+| {rh-openstack-first} | No | N/A
+| Amazon Web Services (AWS) | Yes | Yes
+| Google Cloud Platform (GCP) | Yes | Yes
+| Microsoft Azure | Yes | Yes
 
 |===
+
+For clusters provisioned on public cloud infrastructure, there is a constraint on the absolute number of assignable IP addresses per node. The maximum number of assignable IP addresses per node, or _IP capacity_, can be described in the following formula:
+
+[source,text]
+----
+IP capacity = public cloud default capacity - sum(current IP assignments)
+----
+
+While the Egress IPs capability manages the IP address capacity per node, it is important to plan for this constraint in your deployments.
 
 ifdef::ovn[]
 [id="nw-egress-ips-considerations_{context}"]
